@@ -1,0 +1,16 @@
+{
+    "mistral": {
+      "model_name": "mistral",
+      "api_type": "openai",
+      "api_base": "http://model-server:9090/v1",
+      "api_key": "key",
+      "anony_only": false
+    },
+    "capybara": {
+        "model_name": "capybara",
+        "api_type": "openai",
+        "api_base": "http://model-server:9092/v1",
+        "api_key": "key",
+        "anony_only": false
+    }
+}
