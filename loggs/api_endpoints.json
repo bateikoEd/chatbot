@@ -1,0 +1,9 @@
+{
+   "capybara": {
+        "model_name": "capybara",
+        "api_type": "openai",
+        "api_base": "http://model-server-capybara:8001/v1",
+        "api_key": "key",
+        "anony_only": false
+    }
+}

@@ -1,0 +1,56 @@
+services:
+    web-gradio:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        ports:
+        - "9091:7860"
+        volumes:
+        - /home/bateiko/Projects/publication/chatbot-evaluation/loggs:/app/loggs
+        expose:
+          - "7860"
+        depends_on:
+        - model-server-capybara
+#        - fast-chat-controller
+        - localhost
+        command: python3 -m fastchat.serve.gradio_web_server --controller-url "" --share --register-api-endpoint-file api_endpoints.json
+
+
+#    fast-chat-controller:
+#        build:
+#          context: .
+#          dockerfile: DockerfileController
+#        ports:
+#        - "9080:21001"
+##        volumes:
+##        - /home/bateiko/Projects/publication/chatbot-evaluation/loggs:/app/loggs
+#        expose:
+#          - "21001"
+#        depends_on:
+#        - model-server-capybara
+#        command: python3 -m fastchat.serve.controller --host 0.0.0.0 --port 21001
+
+    model-server-capybara:
+      image: ghcr.io/abetlen/llama-cpp-python:latest
+      ports:
+      - "8001:8001"
+
+      volumes:
+        - /home/bateiko/Projects/publication/chatbot-evaluation/models:/models
+
+      environment:
+        - MODEL=/models/capybarahermes-2.5-mistral-7b.Q2_K.gguf
+        - API_KEY=key
+        - CHAT_FORMAT=chatml
+        - PORT=8001
+#        - SYSTEM_PROMPT_FILE=/home/haltia/models/system_prompt.json
+
+    localhost:
+      build:
+        context: .
+        dockerfile: Dockerfile_localhost
+#      ports:
+#        - "9090:9090"
+      expose:
+        - "9090"
+      command: python3 main.py
