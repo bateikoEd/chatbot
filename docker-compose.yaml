@@ -2,28 +2,75 @@ services:
     model-server-capybara:
       image: ghcr.io/abetlen/llama-cpp-python:latest
       ports:
-      - "9081:8001"
+        - "9081:8001"
 
       volumes:
         - /home/bateiko/Projects/publication/chatbot-evaluation/models:/models
 
       environment:
-        - MODEL=/models/capybarahermes-2.5-mistral-7b.Q2_K.gguf, /models/capybarahermes-2.5-mistral-7b.Q2_K.gguf
+        - MODEL=/models/capybarahermes-2.5-mistral-7b.Q2_K.gguf
         - API_KEY=key
         - CHAT_FORMAT=chatml
         - PORT=8001
-#        - SYSTEM_PROMPT_FILE=
+##        - SYSTEM_PROMPT_FILE=
 
-    model-server-mistral:
-      image: ghcr.io/abetlen/llama-cpp-python:latest
+    web-app:
+      build:
+        context: .
+        dockerfile: Dockerfile
+
       ports:
-      - "9091:8001"
-
-      volumes:
-        - /home/bateiko/Projects/publication/chatbot-evaluation/models:/models
-
+          - "9090:8080"
       environment:
-        - MODEL=/models/mistral-7b-v0.1.Q2_K.gguf
+        - MODEL_URL=http://model-server-capybara:8001/v1
+        - MODEL_NAME=/models/mistral-7b-v0.1.Q2_K.gguf
         - API_KEY=key
-        - CHAT_FORMAT=chatml
-        - PORT=8001
+        - PORT=8080
+        - HOST=0.0.0.0
+#      depends_on:
+#        - model-server-mistral
+      volumes:
+        - /home/bateiko/Projects/publication/chatbot-evaluation/loggs:/app/loggs
+      command: python3 src/gradio_app.py
+
+#    model-server-mistral:
+#      image: ghcr.io/abetlen/llama-cpp-python:latest
+#      ports:
+#      - "9091:8001"
+#      volumes:
+#        - /home/bateiko/Projects/publication/chatbot-evaluation/models:/models
+#      environment:
+#        - MODEL_URL=/models/mistral-7b-v0.1.Q2_K.gguf
+#        - API_KEY=key
+#        - CHAT_FORMAT=chatml
+#        - PORT=8001
+
+#    storage:
+#        restart: always
+#        networks:
+#          default:
+#            aliases:
+#              - bor.minio
+#        image: minio/minio:latest
+#        ports:
+#          - '9010:9000'
+#          - '9001:9001'
+#        environment:
+#          MINIO_DOMAIN: "minio.local"
+#          MINIO_ACCESS_KEY: ACCESS_KEY_ID
+#          MINIO_SECRET_KEY: secret123
+#          MINIO_HTTP_TRACE: /dev/stdout
+#        command: minio server --address 0.0.0.0:80 /var/data/fakes3
+#        volumes:
+#          - /home/bateiko/Projects/publication/chatbot-evaluation/loggs:/var/data/fakes3:delegated
+#
+#volumes:
+#  minio-data:
+
+#networks:
+#  minionetwork:
+#    driver: bridge
+#
+#volumes:
+#  minio_data:
+#    driver: local

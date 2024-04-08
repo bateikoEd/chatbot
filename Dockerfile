@@ -1,12 +1,17 @@
 FROM python:3.12-slim
 
-RUN apt-get -y update && apt-get install -y fortunes
+RUN apt-get -y update
 
-RUN pip install fschat[model_worker,webui]
 
 RUN mkdir app/
 
-WORKDIR app/loggs
+COPY requirements.txt app/requirements.txt
 
-CMD python3 -m fastchat.serve.gradio_web_server --controller-url "" --share --register-api-endpoint-file api_endpoints.json
+RUN pip install -r app/requirements.txt
 
+COPY /src/ app/src/
+COPY /loggs/ app/loggs/
+
+WORKDIR app
+
+CMD python3 src/gradio_app.py

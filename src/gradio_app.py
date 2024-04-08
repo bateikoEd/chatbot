@@ -8,15 +8,16 @@ from datetime import datetime
 
 # Configure the logger
 current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-logger.add(f"loggs/app-loging-{current_time}.log", format="{time} {level} {message}", level="INFO")
+logger.add(f"../loggs/app-loging-{current_time}.log", format="{time} {level} {message}", level="INFO")
 
-
+# configure env variables
 MODEL_URL = os.getenv("MODEL_URL", "http://0.0.0.0:9091/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "/models/mistral-7b-v0.1.Q2_K.gguf")
 API_KEY = os.getenv("API_KEY", "key")
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = os.getenv("PORT", 9008)
+PORT = int(PORT)
 
 
 COMMENT_FLAG = False
