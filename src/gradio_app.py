@@ -19,6 +19,8 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = os.getenv("PORT", 9008)
 
 
+COMMENT_FLAG = False
+
 client = OpenAI(
     base_url=MODEL_URL,
     api_key=API_KEY
@@ -52,6 +54,9 @@ def predict(message, history):
 
     logger.info(f"Assistant response: {text}")
 
+    global COMMENT_FLAG
+    COMMENT_FLAG = True
+
 
 js = """function () {
   gradioURL = window.location.href
@@ -70,19 +75,21 @@ full-height {
 """
 
 
-# Define the upvote and downvote functions
 def upvote():
-    # Add your upvote logic here
-    logger.info("Upvoted!")
+    global COMMENT_FLAG
+
+    if COMMENT_FLAG:
+        logger.info("Upvoted!")
+        COMMENT_FLAG = False
 
 
 def downvote():
-    # Add your downvote logic here
-    logger.info("Downvoted!")
+    global COMMENT_FLAG
 
+    if COMMENT_FLAG:
+        logger.info("Downvoted!")
+        COMMENT_FLAG = False
 
-# upvote_button = gr.Interface(fn=upvote, inputs="button", outputs="text", description="Upvote")
-# downvote_button = gr.Interface(fn=downvote, inputs="button", outputs="text", description="Downvote")
 
 with gr.Blocks(theme=gr.themes.Soft(), js=js, css=css, fill_height=True) as demo:
 
