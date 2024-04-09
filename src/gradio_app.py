@@ -1,48 +1,47 @@
 import gradio as gr
-
 from openai import OpenAI
-import os
-
 from loguru import logger
 from datetime import datetime
 from minio_connection import save_log
 from pydantic_settings import BaseSettings
 from pydantic import Field, HttpUrl
-# Configure the logger
+
 current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
+# define path log file
 file_name = f"loggs/app-loging-{current_time}.log"
 
+# Configure the logger
 logger.add(file_name, format="{time} {level} {message}", level="INFO")
 
 
 # configure env variables
 class Settings(BaseSettings):
-    model_url: HttpUrl = Field(alias="MODEL_URL")
+    url: HttpUrl = Field(alias="MODEL_URL")
     model: str = Field(alias="MODEL_NAME")
     api_key: str = Field(alias="API_KEY")
     host: str = Field(alias="HOST")
     port: int = Field(alias="PORT")
 
-# MODEL_URL = os.getenv("MODEL_URL", "http://0.0.0.0:9091/v1")
-# MODEL_NAME = os.getenv("MODEL_NAME", "/models/mistral-7b-v0.1.Q2_K.gguf")
-# API_KEY = os.getenv("API_KEY", "key")
-#
-# HOST = os.getenv("HOST", "0.0.0.0")
-# PORT = os.getenv("PORT", 9008)
-# PORT = int(PORT)
 
 settings = Settings()
 
-COMMENT_FLAG = False
+# define bool flag for comment upvote and downvote
+COMMENT_FLAG: bool = False
 
-client = OpenAI(
-    base_url=str(settings.model_url),
-    api_key=settings.api_key
-)
+client = OpenAI(base_url=str(settings.url), api_key=settings.api_key)
 
 
-def predict(message, history):
+def predict(message: str, history: list[tuple[str, str]]):
+    """
+    This function is used to predict the next message from the user conversation history
+
+    :param message:
+    :param history:
+    :return:
+    """
+    global COMMENT_FLAG
+
     messages = []
 
     for user_message, assistant_message in history:
@@ -52,9 +51,7 @@ def predict(message, history):
     messages.append({"role": "user", "content": message})
 
     response = client.chat.completions.create(
-        model=settings.model,
-        messages=messages,
-        stream=True
+        model=settings.model, messages=messages, stream=True
     )
     logger.info("=====================================")
     logger.info(f"Model name: {settings.model}")
@@ -70,11 +67,34 @@ def predict(message, history):
     dict_output = dict(response=text)
     logger.info(f"Assistant response: {dict_output}")
 
-    global COMMENT_FLAG
     COMMENT_FLAG = True
 
     # save log into minio storage
     save_log(file_name)
+
+
+def upvote():
+    """
+    This function is used to upvote the assistant response in to log file
+    :return:
+    """
+    global COMMENT_FLAG
+
+    if COMMENT_FLAG:
+        logger.info("Upvoted!")
+        COMMENT_FLAG = False
+
+
+def downvote():
+    """
+    This function is used to downvote the assistant response in to log file
+    :return:
+    """
+    global COMMENT_FLAG
+
+    if COMMENT_FLAG:
+        logger.info("Downvoted!")
+        COMMENT_FLAG = False
 
 
 js = """function () {
@@ -94,26 +114,16 @@ full-height {
 """
 
 
-def upvote():
-    global COMMENT_FLAG
-
-    if COMMENT_FLAG:
-        logger.info("Upvoted!")
-        COMMENT_FLAG = False
-
-
-def downvote():
-    global COMMENT_FLAG
-
-    if COMMENT_FLAG:
-        logger.info("Downvoted!")
-        COMMENT_FLAG = False
-
-
 with gr.Blocks(theme=gr.themes.Soft(), js=js, css=css, fill_height=True) as demo:
 
-    gr.ChatInterface(predict, fill_height=True,
-                     examples=["What is the capital of France?", "Who was the first person on the moon?"])
+    gr.ChatInterface(
+        predict,
+        fill_height=True,
+        examples=[
+            "What is the capital of France?",
+            "Who was the first person on the moon?",
+        ],
+    )
 
     with gr.Row() as button_row:
         upvote_btn = gr.Button(value="👍  Upvote", interactive=True)

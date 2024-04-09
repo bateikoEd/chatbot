@@ -12,7 +12,6 @@ services:
         - API_KEY=key
         - CHAT_FORMAT=chatml
         - PORT=8001
-##        - SYSTEM_PROMPT_FILE=
 
     web-app:
       build:
