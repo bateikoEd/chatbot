@@ -82,6 +82,7 @@ def upvote():
 
     if COMMENT_FLAG:
         logger.info("Upvoted!")
+        save_log(file_name)
         COMMENT_FLAG = False
 
 
@@ -94,6 +95,7 @@ def downvote():
 
     if COMMENT_FLAG:
         logger.info("Downvoted!")
+        save_log(file_name)
         COMMENT_FLAG = False
 
 
