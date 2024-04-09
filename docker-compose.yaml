@@ -8,8 +8,8 @@ services:
         - /home/bateiko/Projects/publication/chatbot-evaluation/models:/models
 
       environment:
-        - MODEL=/models/capybarahermes-2.5-mistral-7b.Q2_K.gguf
-        - API_KEY=key
+        - MODEL=${MODEL_NAME}
+        - API_KEY=${API_KEY}
         - CHAT_FORMAT=chatml
         - PORT=8001
 
@@ -17,24 +17,21 @@ services:
       build:
         context: .
         dockerfile: Dockerfile
-
       ports:
           - "9090:8080"
       environment:
         - MODEL_URL=http://model-server-capybara:8001/v1
-        - MODEL_NAME=/models/mistral-7b-v0.1.Q2_K.gguf
-        - API_KEY=key
+        - MODEL_NAME=${MODEL_NAME}
+        - API_KEY=${API_KEY}
         - PORT=8080
         - HOST=0.0.0.0
         - MINIO_ENDPOINT=minio:9000
-        - MINIO_ROOT_USER=user1111
-        - MINIO_ROOT_PASSWORD=user1111
-        - MINIO_BUCKET=logging
+        - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+        - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+        - MINIO_BUCKET=${MINIO_BUCKET}
       depends_on:
         - model-server-capybara
         - minio
-      volumes:
-        - /home/bateiko/Projects/publication/chatbot-evaluation/loggs:/app/loggs
       command: python3 src/gradio_app.py
 
     minio:
@@ -44,8 +41,8 @@ services:
        - "9010:9000"
        - "9001:9001"
      environment:
-       MINIO_ROOT_USER: user1111
-       MINIO_ROOT_PASSWORD: user1111
+       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
      volumes:
        - minio-storage:/data
      healthcheck:
