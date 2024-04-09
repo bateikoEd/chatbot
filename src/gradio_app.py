@@ -5,26 +5,40 @@ import os
 
 from loguru import logger
 from datetime import datetime
-
+from minio_connection import save_log
+from pydantic_settings import BaseSettings
+from pydantic import Field, HttpUrl
 # Configure the logger
 current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-logger.add(f"../loggs/app-loging-{current_time}.log", format="{time} {level} {message}", level="INFO")
+
+file_name = f"loggs/app-loging-{current_time}.log"
+
+logger.add(file_name, format="{time} {level} {message}", level="INFO")
+
 
 # configure env variables
-MODEL_URL = os.getenv("MODEL_URL", "http://0.0.0.0:9091/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "/models/mistral-7b-v0.1.Q2_K.gguf")
-API_KEY = os.getenv("API_KEY", "key")
+class Settings(BaseSettings):
+    model_url: HttpUrl = Field(alias="MODEL_URL")
+    model: str = Field(alias="MODEL_NAME")
+    api_key: str = Field(alias="API_KEY")
+    host: str = Field(alias="HOST")
+    port: int = Field(alias="PORT")
 
-HOST = os.getenv("HOST", "0.0.0.0")
-PORT = os.getenv("PORT", 9008)
-PORT = int(PORT)
+# MODEL_URL = os.getenv("MODEL_URL", "http://0.0.0.0:9091/v1")
+# MODEL_NAME = os.getenv("MODEL_NAME", "/models/mistral-7b-v0.1.Q2_K.gguf")
+# API_KEY = os.getenv("API_KEY", "key")
+#
+# HOST = os.getenv("HOST", "0.0.0.0")
+# PORT = os.getenv("PORT", 9008)
+# PORT = int(PORT)
 
+settings = Settings()
 
 COMMENT_FLAG = False
 
 client = OpenAI(
-    base_url=MODEL_URL,
-    api_key=API_KEY
+    base_url=str(settings.model_url),
+    api_key=settings.api_key
 )
 
 
@@ -38,12 +52,12 @@ def predict(message, history):
     messages.append({"role": "user", "content": message})
 
     response = client.chat.completions.create(
-        model=MODEL_NAME,
+        model=settings.model,
         messages=messages,
         stream=True
     )
     logger.info("=====================================")
-    logger.info(f"Model name: {MODEL_NAME}")
+    logger.info(f"Model name: {settings.model}")
     logger.info(f"User message: {messages}")
 
     text = ""
@@ -53,10 +67,14 @@ def predict(message, history):
             text += content
             yield text
 
-    logger.info(f"Assistant response: {text}")
+    dict_output = dict(response=text)
+    logger.info(f"Assistant response: {dict_output}")
 
     global COMMENT_FLAG
     COMMENT_FLAG = True
+
+    # save log into minio storage
+    save_log(file_name)
 
 
 js = """function () {
@@ -109,4 +127,6 @@ with gr.Blocks(theme=gr.themes.Soft(), js=js, css=css, fill_height=True) as demo
     )
 
 if __name__ == "__main__":
-    demo.launch(server_name=HOST, server_port=PORT)
+    logger.info(f"Server is running on {settings.host}:{settings.port}")
+
+    demo.launch(server_name=settings.host, server_port=settings.port)

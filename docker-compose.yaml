@@ -27,50 +27,33 @@ services:
         - API_KEY=key
         - PORT=8080
         - HOST=0.0.0.0
-#      depends_on:
-#        - model-server-mistral
+        - MINIO_ENDPOINT=minio:9000
+        - MINIO_ROOT_USER=user1111
+        - MINIO_ROOT_PASSWORD=user1111
+        - MINIO_BUCKET=logging
+      depends_on:
+        - model-server-capybara
+        - minio
       volumes:
         - /home/bateiko/Projects/publication/chatbot-evaluation/loggs:/app/loggs
       command: python3 src/gradio_app.py
 
-#    model-server-mistral:
-#      image: ghcr.io/abetlen/llama-cpp-python:latest
-#      ports:
-#      - "9091:8001"
-#      volumes:
-#        - /home/bateiko/Projects/publication/chatbot-evaluation/models:/models
-#      environment:
-#        - MODEL_URL=/models/mistral-7b-v0.1.Q2_K.gguf
-#        - API_KEY=key
-#        - CHAT_FORMAT=chatml
-#        - PORT=8001
+    minio:
+     image: minio/minio:latest
+     command: server --console-address ":9001" /data/ --address 0.0.0.0:9000
+     ports:
+       - "9010:9000"
+       - "9001:9001"
+     environment:
+       MINIO_ROOT_USER: user1111
+       MINIO_ROOT_PASSWORD: user1111
+     volumes:
+       - minio-storage:/data
+     healthcheck:
+       test: ["CMD", "curl", "-f", "http://0.0.0.0:9000/minio/health/live"]
+       interval: 30s
+       timeout: 20s
+       retries: 3
 
-#    storage:
-#        restart: always
-#        networks:
-#          default:
-#            aliases:
-#              - bor.minio
-#        image: minio/minio:latest
-#        ports:
-#          - '9010:9000'
-#          - '9001:9001'
-#        environment:
-#          MINIO_DOMAIN: "minio.local"
-#          MINIO_ACCESS_KEY: ACCESS_KEY_ID
-#          MINIO_SECRET_KEY: secret123
-#          MINIO_HTTP_TRACE: /dev/stdout
-#        command: minio server --address 0.0.0.0:80 /var/data/fakes3
-#        volumes:
-#          - /home/bateiko/Projects/publication/chatbot-evaluation/loggs:/var/data/fakes3:delegated
-#
-#volumes:
-#  minio-data:
-
-#networks:
-#  minionetwork:
-#    driver: bridge
-#
-#volumes:
-#  minio_data:
-#    driver: local
+volumes:
+ minio-storage:
