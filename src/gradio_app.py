@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     api_key: str = Field(alias="API_KEY")
     host: str = Field(alias="HOST")
     port: int = Field(alias="PORT")
+    stop_words: list[str] = Field(default=["<|im_start|>"], alias="STOP_WORDS")
 
 
 settings = Settings()
