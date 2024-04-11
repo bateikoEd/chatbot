@@ -1,0 +1,5 @@
+FROM ghcr.io/abetlen/llama-cpp-python:latest
+
+RUN apt install curl -y
+
+CMD /bin/sh /app/docker/simple/run.sh

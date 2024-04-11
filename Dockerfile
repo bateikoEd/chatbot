@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 RUN apt-get -y update
-
+RUN apt install curl -y
 
 RUN mkdir app/
 
