@@ -52,7 +52,7 @@ def predict(message: str, history: list[tuple[str, str]]):
     messages.append({"role": "user", "content": message})
 
     response = client.chat.completions.create(
-        model=settings.model, messages=messages, stream=True
+        model=settings.model, messages=messages, stream=True, stop=settings.stop_words
     )
     logger.info("=====================================")
     logger.info(f"Model name: {settings.model}")
@@ -141,5 +141,6 @@ with gr.Blocks(theme=gr.themes.Soft(), js=js, css=css, fill_height=True) as demo
 
 if __name__ == "__main__":
     logger.info(f"Server is running on {settings.host}:{settings.port}")
+    logger.info(f"stop words: {settings.stop_words}")
 
     demo.launch(server_name=settings.host, server_port=settings.port)
