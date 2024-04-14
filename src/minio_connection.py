@@ -1,7 +1,6 @@
 from minio import Minio
-from minio.error import S3Error
 from pydantic_settings import BaseSettings
-from pydantic import Field, HttpUrl
+from pydantic import Field
 
 
 class MinioSettings(BaseSettings):
@@ -11,8 +10,10 @@ class MinioSettings(BaseSettings):
     bucket_name: str = Field(default="logging", alias="MINIO_BUCKET")
 
 
+# read the settings from the .env file
 minio_settings = MinioSettings()
 
+# create an instance of the MinIO class
 client = Minio(
     endpoint=minio_settings.minio_endpoint,
     access_key=minio_settings.minio_access_key,
@@ -22,7 +23,11 @@ client = Minio(
 
 
 def save_log(source_file: str):
-
+    """
+    This function is used to save the file to the MinIO server
+    :param source_file:
+    :return:
+    """
     # The destination bucket and filename on the MinIO server
     bucket_name = minio_settings.bucket_name
 
