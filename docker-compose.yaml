@@ -8,7 +8,7 @@ services:
         - "${MODEL_API_PORT}:8001"
 
       volumes:
-        - /home/bateiko/Projects/publication/chatbot-evaluation/models:/models
+        - ${MODEL_VOLUME_PATH}:/models
 
       environment:
         - MODEL=${MODEL_NAME}
