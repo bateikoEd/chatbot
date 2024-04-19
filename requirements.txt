@@ -1,0 +1,5 @@
+loguru==0.7.2
+openai==1.16.2
+gradio==4.24.0
+pydantic-settings==2.2.1
+minio==7.2.5

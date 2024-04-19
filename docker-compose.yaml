@@ -1,0 +1,80 @@
+services:
+    model-server-capybara:
+      build:
+        context: .
+        dockerfile: Dockerfile_model
+
+      ports:
+        - "${MODEL_API_PORT}:8001"
+
+      volumes:
+        - ${MODEL_VOLUME_PATH}:/models
+
+      environment:
+        - MODEL=${MODEL_NAME}
+        - API_KEY=${API_KEY}
+        - CHAT_FORMAT=chatml
+        - PORT=8001
+      command: /bin/sh /app/docker/simple/run.sh
+
+      healthcheck:
+        test: curl -s -I http://model-server-capybara:8001/docs# | head -n 1 | grep 200
+        interval: 20s
+        timeout: 10s
+        retries: 3
+      restart: on-failure
+
+
+    web-app:
+      build:
+        context: .
+        dockerfile: Dockerfile
+
+      ports:
+          - "${APP_PORT}:8080"
+
+      environment:
+        - MODEL_URL=http://model-server-capybara:8001/v1
+        - MODEL_NAME=${MODEL_NAME}
+        - API_KEY=${API_KEY}
+        - PORT=8080
+        - HOST=0.0.0.0
+        - MINIO_ENDPOINT=minio:9000
+        - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+        - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+        - MINIO_BUCKET=${MINIO_BUCKET}
+
+      depends_on:
+        - model-server-capybara
+        - minio
+      command: python3 src/gradio_app.py
+
+      healthcheck:
+        test: curl -s -I http://web-app:8080 | head -n 1 | grep 200
+        interval: 5s
+        timeout: 5s
+        retries: 3
+      restart: on-failure
+
+    minio:
+     image: minio/minio:latest
+     command: server --console-address ":9001" /data/ --address 0.0.0.0:9000
+     ports:
+       - "${MINIO_PORT}:9000"
+       - "9001:9001"
+
+     environment:
+       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
+     volumes:
+       - minio-storage:/data
+
+     healthcheck:
+       test: ["CMD", "curl", "-f", "http://0.0.0.0:9001/minio/health/live"]
+       interval: 30s
+       timeout: 20s
+       retries: 3
+
+volumes:
+ minio-storage:
