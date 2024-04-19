@@ -1,4 +1,4 @@
-# chatbot-evaluation
+# Chatbot
 
 ## Architecture Diagram
 ![Architecture Diagram](images/architecture_diagram.png)
@@ -30,7 +30,7 @@ APP_PORT=9090
 MODEL_API_PORT=9081
 MINIO_PORT=9010
 
-# path to the model volume 
+# path to the model volume
 MODEL_VOLUME_PATH=/home/chatbot-evaluation/models
 ```
 
